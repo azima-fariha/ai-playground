@@ -40,6 +40,31 @@
       <div id="recipesList"></div>
     </div>
   </main>
+
+  <div id="editModal" class="modal" hidden>
+    <div class="modal-content">
+      <h3>Edit recipe</h3>
+      <form id="editForm">
+        <label for="editTitle">Title</label>
+        <input type="text" id="editTitle" required />
+        <label for="editIngredients">Ingredients (one per line)</label>
+        <textarea id="editIngredients" rows="6"></textarea>
+        <label for="editSteps">Steps (one per line)</label>
+        <textarea id="editSteps" rows="6"></textarea>
+        <label>Tags</label>
+        <div class="tag-checkboxes">
+          <label><input type="checkbox" name="editTag" value="breakfast" /> Breakfast</label>
+          <label><input type="checkbox" name="editTag" value="lunch" /> Lunch</label>
+          <label><input type="checkbox" name="editTag" value="dinner" /> Dinner</label>
+          <label><input type="checkbox" name="editTag" value="snacks" /> Snacks</label>
+        </div>
+        <div class="modal-actions">
+          <button type="button" id="editCancelBtn">Cancel</button>
+          <button type="submit">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
   <script src="/static/app.js"></script>
 </body>
 </html>

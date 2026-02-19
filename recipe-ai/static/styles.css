@@ -196,6 +196,95 @@ h1 {
   font-style: italic;
 }
 
+.loading {
+  color: #666;
+  font-style: italic;
+}
+
 .error {
   color: #dc3545;
+}
+
+/* Edit modal */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal[hidden] {
+  display: none;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  max-width: 32rem;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-content h3 {
+  margin-top: 0;
+}
+
+.modal-content label {
+  display: block;
+  font-weight: 600;
+  margin: 1rem 0 0.35rem 0;
+}
+
+.modal-content input[type="text"],
+.modal-content textarea {
+  width: 100%;
+  padding: 0.5rem;
+  font: inherit;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.tag-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+}
+
+.tag-checkboxes label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: normal;
+  margin: 0.5rem 0 0 0;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.recipe-actions {
+  margin-top: 1rem;
+}
+
+.recipe-actions button {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.9rem;
+}
+
+.deleteRecipeBtn {
+  color: #dc3545;
+  border-color: #dc3545;
+  margin-left: 0.5rem;
+}
+
+.deleteRecipeBtn:hover {
+  background: #dc3545;
+  color: #fff;
 }

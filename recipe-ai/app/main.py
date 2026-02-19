@@ -1,3 +1,5 @@
+import asyncio
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -9,8 +11,8 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import logging
 
-from app.models import Recipe
-from app.storage import list_recipes, add_recipe, get_recipe
+from app.models import Recipe, RecipeCreate
+from app.storage import init_db, list_recipes, add_recipe, get_recipe, update_recipe, delete_recipe
 from app.services import transcript_to_recipe
 
 logging.basicConfig(level=logging.INFO)
@@ -21,7 +23,20 @@ APP_DIR = Path(__file__).resolve().parent
 ROOT_DIR = APP_DIR.parent
 STATIC_DIR = ROOT_DIR / "static"
 
-app = FastAPI(title="Personal Recipe Website")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    yield
+
+
+app = FastAPI(title="Personal Recipe Website", lifespan=lifespan)
+
+
+@app.get("/health")
+def health():
+    """Health check for deployments."""
+    return {"status": "ok"}
 
 
 class VoiceBody(BaseModel):
@@ -36,13 +51,15 @@ def api_voice(body: VoiceBody):
 
 
 @app.post("/api/recipes/from-voice")
-def api_recipes_from_voice(body: VoiceBody) -> Recipe:
+async def api_recipes_from_voice(body: VoiceBody) -> Recipe:
     """Convert voice transcript to structured recipe via Ollama and save."""
     transcript = body.transcript.strip()
     if not transcript:
         raise HTTPException(status_code=400, detail="Transcript is empty")
     try:
-        recipe_create = transcript_to_recipe(transcript)
+        recipe_create = await asyncio.to_thread(transcript_to_recipe, transcript)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         logger.exception("LLM failed to parse recipe")
         raise HTTPException(status_code=500, detail=f"Failed to parse recipe: {e}") from e
@@ -63,6 +80,23 @@ def api_recipe_get(recipe_id: str) -> Recipe:
     if not recipe:
         raise HTTPException(status_code=404, detail="Recipe not found")
     return recipe
+
+
+@app.put("/api/recipes/{recipe_id}")
+def api_recipe_update(recipe_id: str, body: RecipeCreate) -> Recipe:
+    """Update a recipe."""
+    recipe = update_recipe(recipe_id, body)
+    if not recipe:
+        raise HTTPException(status_code=404, detail="Recipe not found")
+    return recipe
+
+
+@app.delete("/api/recipes/{recipe_id}")
+def api_recipe_delete(recipe_id: str):
+    """Delete a recipe."""
+    if not delete_recipe(recipe_id):
+        raise HTTPException(status_code=404, detail="Recipe not found")
+    return {"deleted": True}
 
 
 # Serve static files: index.html at /, assets from /static

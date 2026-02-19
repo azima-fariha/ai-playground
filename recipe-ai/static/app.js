@@ -70,6 +70,7 @@
   function renderRecipe(recipe) {
     const div = document.createElement('div');
     div.className = 'recipe-card';
+    div.dataset.recipeId = recipe.id;
     div.innerHTML = `
       <h3 class="recipe-title">${escapeHtml(recipe.title)}</h3>
       <div class="recipe-tags">${(recipe.tags || []).map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('')}</div>
@@ -77,7 +78,13 @@
       <ul>${(recipe.ingredients || []).map(i => `<li>${escapeHtml(i)}</li>`).join('')}</ul>
       <h4>Steps</h4>
       <ol>${(recipe.steps || []).map(s => `<li>${escapeHtml(s)}</li>`).join('')}</ol>
+      <div class="recipe-actions">
+        <button type="button" class="editRecipeBtn">Edit</button>
+        <button type="button" class="deleteRecipeBtn">Delete</button>
+      </div>
     `;
+    div.querySelector('.editRecipeBtn').addEventListener('click', () => openEditModal(recipe));
+    div.querySelector('.deleteRecipeBtn').addEventListener('click', () => deleteRecipe(recipe));
     return div;
   }
 
@@ -88,6 +95,7 @@
   }
 
   async function loadRecipes() {
+    recipesListEl.innerHTML = '<p class="loading">Loading recipes…</p>';
     try {
       const res = await fetch('/api/recipes');
       const recipes = await res.json();
@@ -95,13 +103,98 @@
       if (recipes.length === 0) {
         recipesListEl.innerHTML = '<p class="empty">No recipes yet. Create one with voice!</p>';
       } else {
-        recipes.reverse().forEach(r => {
+        recipes.forEach(r => {
           recipesListEl.appendChild(renderRecipe(r));
         });
       }
     } catch (err) {
       recipesListEl.innerHTML = '<p class="error">Could not load recipes.</p>';
     }
+  }
+
+  const editModal = document.getElementById('editModal');
+  const editForm = document.getElementById('editForm');
+  const editCancelBtn = document.getElementById('editCancelBtn');
+  let editingRecipeId = null;
+
+  function openEditModal(recipe) {
+    editingRecipeId = recipe.id;
+    document.getElementById('editTitle').value = recipe.title;
+    document.getElementById('editIngredients').value = (recipe.ingredients || []).join('\n');
+    document.getElementById('editSteps').value = (recipe.steps || []).join('\n');
+    document.querySelectorAll('input[name="editTag"]').forEach(cb => {
+      cb.checked = (recipe.tags || []).includes(cb.value);
+    });
+    editModal.hidden = false;
+  }
+
+  function closeEditModal() {
+    editModal.hidden = true;
+    editingRecipeId = null;
+  }
+
+  editCancelBtn.addEventListener('click', closeEditModal);
+  editModal.addEventListener('click', function (e) {
+    if (e.target === editModal) closeEditModal();
+  });
+
+  editForm.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    if (!editingRecipeId) return;
+    const title = document.getElementById('editTitle').value.trim();
+    const ingredients = document.getElementById('editIngredients').value.split('\n').map(s => s.trim()).filter(Boolean);
+    const steps = document.getElementById('editSteps').value.split('\n').map(s => s.trim()).filter(Boolean);
+    const tags = Array.from(document.querySelectorAll('input[name="editTag"]:checked')).map(cb => cb.value);
+    if (!title) return;
+    try {
+      const res = await fetch('/api/recipes/' + editingRecipeId, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, ingredients, steps, tags }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(Array.isArray(data.detail) ? data.detail.map(d => d.msg || d).join('; ') : (data.detail || res.statusText));
+      const card = recipesListEl.querySelector('[data-recipe-id="' + editingRecipeId + '"]');
+      if (card) {
+        const newCard = renderRecipe(data);
+        card.replaceWith(newCard);
+      }
+      closeEditModal();
+    } catch (err) {
+      alert('Error: ' + err.message);
+    }
+  });
+
+  async function deleteRecipe(recipe) {
+    if (!confirm('Delete recipe "' + recipe.title + '"?')) return;
+    try {
+      const res = await fetch('/api/recipes/' + recipe.id, { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.detail || res.statusText);
+      }
+      const card = recipesListEl.querySelector('[data-recipe-id="' + recipe.id + '"]');
+      if (card) card.remove();
+      const latestCard = latestRecipeEl.querySelector('[data-recipe-id="' + recipe.id + '"]');
+      if (latestCard) {
+        latestRecipeEl.innerHTML = '';
+        responseBox.hidden = true;
+      }
+      if (recipesListEl.children.length === 0) {
+        recipesListEl.innerHTML = '<p class="empty">No recipes yet. Create one with voice!</p>';
+      }
+    } catch (err) {
+      alert('Error: ' + err.message);
+    }
+  }
+
+  function prependRecipe(recipe) {
+    const emptyMsg = recipesListEl.querySelector('.empty');
+    if (emptyMsg) emptyMsg.remove();
+    const loadingMsg = recipesListEl.querySelector('.loading');
+    if (loadingMsg) loadingMsg.remove();
+    const card = renderRecipe(recipe);
+    recipesListEl.insertBefore(card, recipesListEl.firstChild);
   }
 
   createRecipeBtn.addEventListener('click', async function () {
@@ -119,12 +212,12 @@
         body: JSON.stringify({ transcript }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || res.statusText);
+      if (!res.ok) throw new Error(Array.isArray(data.detail) ? data.detail.map(d => d.msg || d).join('; ') : (data.detail || res.statusText));
       latestRecipeEl.innerHTML = '';
       latestRecipeEl.appendChild(renderRecipe(data));
       responseBox.hidden = false;
       statusEl.textContent = 'Recipe created!';
-      loadRecipes();
+      prependRecipe(data);
     } catch (err) {
       statusEl.textContent = 'Error: ' + err.message;
       latestRecipeEl.innerHTML = '<p class="error">' + escapeHtml(err.message) + '</p>';
@@ -145,6 +238,4 @@
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', function () { switchTab(this.dataset.tab); });
   });
-
-  loadRecipes();
 })();
