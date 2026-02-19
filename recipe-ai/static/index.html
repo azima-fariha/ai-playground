@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Recipe Website</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <main>
+    <h1>My Recipe Website</h1>
+    <nav class="tabs">
+      <button type="button" class="tab-btn active" data-tab="create">Create Recipe</button>
+      <button type="button" class="tab-btn" data-tab="recipes">My Recipes</button>
+    </nav>
+
+    <div id="tab-create" class="tab-panel active">
+      <p class="subtitle">Speak your recipe, then create a structured version with ingredients, steps, and tags.</p>
+    <section class="voice-section">
+      <h2>Voice input</h2>
+      <div class="controls">
+        <button type="button" id="startBtn">Start voice</button>
+        <button type="button" id="stopBtn" disabled>Stop</button>
+        <button type="button" id="createRecipeBtn">Create recipe</button>
+      </div>
+      <div class="status" id="status" aria-live="polite">Ready. Click &quot;Start voice&quot; to begin.</div>
+      <div class="transcript-box">
+        <label for="transcript">Transcript</label>
+        <textarea id="transcript" rows="4" readonly placeholder="Your speech will appear here…"></textarea>
+      </div>
+    </section>
+      <div class="response-box" id="responseBox" hidden>
+        <h3>Latest recipe</h3>
+        <div id="latestRecipe"></div>
+      </div>
+    </div>
+
+    <div id="tab-recipes" class="tab-panel">
+      <h2>All recipes</h2>
+      <div id="recipesList"></div>
+    </div>
+  </main>
+  <script src="/static/app.js"></script>
+</body>
+</html>
