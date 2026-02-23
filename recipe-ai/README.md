@@ -91,8 +91,9 @@ flowchart LR
 4. **main.py** calls `add_recipe(recipe_create)`; **storage** generates an id and `created_at`, inserts into SQLite, and returns a `Recipe`.
 5. The API returns that `Recipe` as JSON; the frontend shows it under “Latest recipe” and prepends it to the list; “My Recipes” loads the list via `GET /api/recipes` (same storage layer).
 
-**Flow for list / edit / delete**
+**API summary (HTTP methods)**
 
+- Create: `POST /api/recipes/from-voice` with `{ "transcript": "..." }` → saved `Recipe`.
 - List: `GET /api/recipes` → `list_recipes()` → JSON array of `Recipe`.
 - Edit: `PUT /api/recipes/{id}` with `RecipeCreate` body → `update_recipe()` → JSON `Recipe`.
 - Delete: `DELETE /api/recipes/{id}` → `delete_recipe()` → 204-style success.
