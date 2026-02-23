@@ -19,8 +19,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Directory containing this file (app/main.py) -> project root is parent of "app"
-APP_DIR = Path(__file__).resolve().parent
-ROOT_DIR = APP_DIR.parent
+ROOT_DIR = Path(__file__).resolve().parent.parent
 STATIC_DIR = ROOT_DIR / "static"
 
 
@@ -41,13 +40,6 @@ def health():
 
 class VoiceBody(BaseModel):
     transcript: str
-
-
-@app.post("/api/voice")
-def api_voice(body: VoiceBody):
-    """Receive voice transcript from frontend and echo it back."""
-    logger.info("Received transcript: %s", body.transcript[:100] + "..." if len(body.transcript) > 100 else body.transcript)
-    return {"received": True, "transcript": body.transcript}
 
 
 @app.post("/api/recipes/from-voice")
