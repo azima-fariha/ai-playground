@@ -1,11 +1,10 @@
 # Recipe AI
 
-A personal recipe website that turns spoken or typed recipe descriptions into structured recipes (title, ingredients, steps, tags) using a local LLM, and stores them for browsing and editing.
+A personal recipe website that turns spoken recipe descriptions into structured recipes (title, ingredients, steps, tags) using a local LLM, and stores them for browsing and editing.
 
 ## What it does
 
 - **Create recipes from voice**: Use the browser’s speech recognition to speak a recipe; the app turns the transcript into a structured recipe (title, ingredients, steps, tags) via an LLM and saves it.
-- **Create recipes from text**: Paste or type a recipe description and create a structured recipe the same way.
 - **Manage recipes**: List all recipes, open the latest created one, and edit or delete any recipe.
 
 Recipes are stored in a local SQLite database. The LLM runs locally via [Ollama](https://ollama.ai/) (default model: `llama3.2`).
@@ -84,9 +83,9 @@ flowchart LR
   API -->|JSON recipe| browser
 ```
 
-**Flow for creating a recipe from voice or text**
+**Flow for creating a recipe from voice**
 
-1. User speaks (or types) a recipe; the frontend sends the **transcript** to `POST /api/recipes/from-voice`.
+1. User speaks a recipe; the frontend sends the **transcript** to `POST /api/recipes/from-voice`.
 2. **main.py** validates the body, then calls `transcript_to_recipe(transcript)` in a thread so the async server doesn’t block.
 3. **recipe_llm** sends the transcript to **Ollama** with a fixed prompt asking for JSON (title, ingredients, steps, tags); it parses the response (including ```json blocks) into a `RecipeCreate` object.
 4. **main.py** calls `add_recipe(recipe_create)`; **storage** generates an id and `created_at`, inserts into SQLite, and returns a `Recipe`.
@@ -110,6 +109,6 @@ flowchart LR
    pip install -r requirements.txt
    uvicorn app.main:app --reload
    ```
-3. Open http://127.0.0.1:8000 and use “Create Recipe” (voice or text) and “My Recipes” (list, edit, delete).
+3. Open http://127.0.0.1:8000 and use “Create Recipe” (voice) and “My Recipes” (list, edit, delete).
 
 Optional: create a `.env` with `OLLAMA_BASE_URL` and/or `OLLAMA_MODEL` if you use a different Ollama URL or model.
