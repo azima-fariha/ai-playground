@@ -71,4 +71,5 @@ def transcript_to_recipe(transcript: str) -> RecipeCreate:
     raw = response.content if hasattr(response, "content") else str(response)
     json_str = _extract_json(raw)
     data = json.loads(json_str)
-    return RecipeCreate(**data)
+    recipe = RecipeCreate(**data)
+    return recipe

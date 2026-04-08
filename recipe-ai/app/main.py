@@ -38,6 +38,7 @@ def health():
     return {"status": "ok"}
 
 
+
 class VoiceBody(BaseModel):
     transcript: str
 
@@ -45,6 +46,7 @@ class VoiceBody(BaseModel):
 @app.post("/api/recipes/from-voice")
 async def api_recipes_from_voice(body: VoiceBody) -> Recipe:
     """Convert voice transcript to structured recipe via Ollama and save."""
+    logger.info("Received transcript.")  # Log first 100 chars
     transcript = body.transcript.strip()
     if not transcript:
         raise HTTPException(status_code=400, detail="Transcript is empty")

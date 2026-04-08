@@ -15,3 +15,4 @@ class Recipe(RecipeCreate):
     """Full recipe with id and timestamp."""
     id: str
     created_at: datetime
+
